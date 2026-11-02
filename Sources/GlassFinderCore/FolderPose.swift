@@ -20,6 +20,11 @@ public struct FolderPose: Equatable, Sendable {
         count <= 1 ? 0 : Double(index) / Double(count - 1) * 2 - 1
     }
 
+    public func depthOffset(index: Int, count: Int) -> Double {
+        let depth = Double(max(0, count - 1 - index))
+        return depth * stack * min(1, 3 / Double(max(1, count - 1)))
+    }
+
     /// Stable per-filename jitter; independent of Swift's randomized Hasher.
     public static func jitter(name: String, index: Int) -> (x: Double, rotation: Double) {
         var hash: UInt32 = 2_166_136_261

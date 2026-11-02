@@ -30,7 +30,7 @@ final class CoreTests: XCTestCase {
         preferences.animationSpeed = -1
         preferences.transparency = .infinity
         preferences.normalize()
-        XCTAssertEqual(preferences.previewCount, 5)
+        XCTAssertEqual(preferences.previewCount, 10)
         XCTAssertEqual(preferences.animationSpeed, 0.5)
         XCTAssertEqual(preferences.transparency, 0.9)
         XCTAssertEqual(try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences)), preferences)

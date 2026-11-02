@@ -29,3 +29,7 @@ This is a native adaptation, not the React component running inside a web view. 
 ## Intentional v1.1 refinements
 
 At the user's request, backgrounds are now opt-in rather than always showing the original artwork. New installations start with no background in either tone and a 90% transparency target. The original Aurora/Ember assets remain available as explicit presets. Panel shapes, poses, jitter and animation timing are retained; tint opacity is controlled consistently across tones and the keyline is independent of the background. Reduce Transparency is an accessibility override. Independent custom images and a dot preset are new native features, not part of the supplied upstream implementation.
+
+## Intentional v1.2 refinements
+
+Profiles now independently customize tint/transparency/background/counter/keyline. The default Dark stroke is a muted gray-to-dark gradient without the earlier white rim overlay. Editable multi-stop strokes stay in the panels' local coordinate systems. The reference's lower-left metadata placement guides the optional real item count; no folder name is duplicated inside the graphic. Native-scale 48/64/96-point layouts and bounded 1–10 preview fans are intentional changes requested for v1.2. No Figma or Company Info screenshots were attached, so screenshot matching remains unverified.

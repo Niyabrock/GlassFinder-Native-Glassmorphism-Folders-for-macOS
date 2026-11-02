@@ -6,7 +6,7 @@ struct BrowserView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.openSettings) private var openSettings
     @FocusState private var focused: Bool
-    private let columns = [GridItem(.adaptive(minimum: 218), spacing: 12)]
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: model.preferences.folderSize.cellWidth), spacing: 12)] }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,7 +26,7 @@ struct BrowserView: View {
                     } actions: { Button("Add Folders…") { model.chooseFolders() }.buttonStyle(.borderedProminent) }
                     .frame(maxWidth: .infinity, minHeight: 350)
                 } else {
-                    LazyVGrid(columns: columns, spacing: 20) {
+                    LazyVGrid(columns: columns, spacing: model.preferences.folderSize.labelGap + 20) {
                         ForEach(model.folders) { FolderCard(folder: $0) }
                     }.padding(24)
                 }

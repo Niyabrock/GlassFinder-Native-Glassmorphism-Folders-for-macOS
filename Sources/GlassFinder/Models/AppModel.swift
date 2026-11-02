@@ -13,6 +13,7 @@ final class FolderItem: ObservableObject, Identifiable {
     @Published var files: [PreviewFile] = []
     @Published var images: [NSImage] = []
     @Published var message: String?
+    @Published var itemCount: Int?
     var task: Task<Void, Never>?
     var monitor: DirectoryMonitor?
     var revision = UUID()
@@ -169,12 +170,14 @@ final class AppModel: ObservableObject {
             guard let self, let folder else { return }
             do {
                 if debounce { try await Task.sleep(for: .milliseconds(200)) }
-                let files = try await self.catalog.contents(of: folder.url, limit: limit)
+                let snapshot = try await self.catalog.snapshot(of: folder.url, limit: limit)
                 try Task.checkCancellation()
                 guard self.preferences.isEnabled, folder.revision == revision else { return }
+                let files = snapshot.files
                 folder.files = files
+                folder.itemCount = snapshot.itemCount
                 folder.images = []
-                folder.message = files.isEmpty ? "Empty folder" : nil
+                folder.message = snapshot.itemCount == 0 ? "Empty folder" : (files.isEmpty ? "Only hidden items" : nil)
                 for file in files {
                     if let image = await self.thumbnails.image(for: file, scale: scale) {
                         try Task.checkCancellation()
@@ -186,6 +189,7 @@ final class AppModel: ObservableObject {
             catch {
                 guard self.preferences.isEnabled, folder.revision == revision else { return }
                 folder.files = []; folder.images = []
+                folder.itemCount = nil
                 folder.message = "Unavailable: \(error.localizedDescription)"
             }
         }
@@ -196,6 +200,7 @@ final class AppModel: ObservableObject {
         folder.task?.cancel(); folder.task = nil
         folder.monitor?.stop(); folder.monitor = nil
         folder.files = []; folder.images = []; folder.message = nil
+        folder.itemCount = nil
         if folder.scoped { folder.url.stopAccessingSecurityScopedResource(); folder.scoped = false }
     }
 

@@ -6,30 +6,39 @@ import GlassFinderCore
 struct FolderCard: View {
     @ObservedObject var folder: FolderItem
     @EnvironmentObject private var model: AppModel
+    @Environment(\.colorScheme) private var colorScheme
     @State private var hovered = false
     private var selected: Bool { model.selection == folder.id }
+    private var size: FolderSize { model.preferences.folderSize }
+    private var accessibilitySummary: String {
+        let profile = model.preferences.profile(for: model.preferences.activeTone(systemIsDark: colorScheme == .dark))
+        let state = selected ? "Selected folder" : "Folder"
+        guard model.preferences.isEnabled, profile.showItemCount, let count = folder.itemCount else { return state }
+        return state + ", " + (count == 1 ? "1 item" : "\(count) items")
+    }
 
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: size.labelGap) {
             if model.preferences.isEnabled {
                 GlassFolderView(images: folder.images, names: folder.files.map { $0.url.lastPathComponent },
                                 selected: selected, hovered: hovered,
-                                preferences: model.preferences)
+                                preferences: model.preferences, itemCount: folder.itemCount)
             } else {
                 Image(nsImage: NSWorkspace.shared.icon(forFile: folder.url.path))
-                    .resizable().scaledToFit().frame(width: 140, height: 130)
-                    .frame(width: 210, height: 326 * 210 / 340)
+                    .resizable().scaledToFit().frame(width: size.iconWidth, height: size.iconWidth * 272 / 340)
+                    .frame(width: size.iconWidth, height: size.iconWidth * 326 / 340)
             }
             Text(folder.url.lastPathComponent)
-                .font(.system(size: 13)).lineLimit(2).multilineTextAlignment(.center)
-                .padding(.horizontal, 5).padding(.vertical, 2)
+                .font(.system(size: size.labelFont)).lineLimit(2).multilineTextAlignment(.center)
+                .padding(.horizontal, size.labelFont / 3).padding(.vertical, size.labelFont / 8)
                 .foregroundStyle(selected ? Color.white : .primary)
                 .background(selected ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 4))
-                .frame(maxWidth: 190)
+                .frame(maxWidth: size.cellWidth - 12)
             Text(folder.message ?? " ")
-                .font(.caption2).foregroundStyle(.secondary).lineLimit(1).frame(maxWidth: 190)
+                .font(.system(size: max(9, size.labelFont - 2))).foregroundStyle(.secondary).lineLimit(1).frame(maxWidth: size.cellWidth - 12)
         }
-        .frame(width: 218, height: 250)
+        .frame(width: size.cellWidth, height: size.cellHeight, alignment: .top)
+        .zIndex(selected ? 1 : 0)
         .contentShape(Rectangle())
         .overlay {
             FolderClickSurface(single: { model.select(folder.id) }, double: { model.selection = folder.id; model.open(folder) }, key: { code in
@@ -50,7 +59,7 @@ struct FolderCard: View {
         .onChange(of: model.interactionGeneration) { _, _ in hovered = false }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(folder.url.lastPathComponent)
-        .accessibilityValue(selected ? "Selected folder" : "Folder")
+        .accessibilityValue(accessibilitySummary)
         .accessibilityHint("Activate to open in Finder")
         .accessibilityAction { model.open(folder) }
         .contextMenu {

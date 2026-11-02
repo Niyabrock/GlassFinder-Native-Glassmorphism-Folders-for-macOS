@@ -59,18 +59,22 @@ struct GlassFolderView: View {
     let selected: Bool
     let hovered: Bool
     let preferences: Preferences
+    var itemCount: Int? = nil
+    var displayWidth: CGFloat? = nil
     @EnvironmentObject private var backgrounds: BackgroundStore
     @Environment(\.colorScheme) private var systemScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @State private var pointer = CGPoint.zero
-    private let scale: CGFloat = 210 / 340
+    private var iconWidth: CGFloat { displayWidth ?? CGFloat(preferences.folderSize.iconWidth) }
+    private var scale: CGFloat { iconWidth / 340 }
     private var dark: Bool {
-        preferences.appearance == .dark || (preferences.appearance == .automatic && systemScheme == .dark)
+        preferences.activeTone(systemIsDark: systemScheme == .dark) == .dark
     }
     private var motionReduced: Bool { systemReduceMotion || preferences.reduceMotion }
     private var pose: FolderPose { .resolve(selected: selected, hovered: hovered, hoverEnabled: preferences.hoverPreviews) }
     private var tone: BackgroundTone { dark ? .dark : .light }
+    private var profile: AppearanceProfile { preferences.profile(for: tone) }
     private var background: FolderBackground { preferences.background(for: tone) }
     private var artwork: NSImage? {
         switch background {
@@ -80,7 +84,7 @@ struct GlassFolderView: View {
         default: return nil
         }
     }
-    private var tintOpacity: Double { 1 - preferences.transparency }
+    private var tintOpacity: Double { 1 - profile.transparency }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -100,12 +104,12 @@ struct GlassFolderView: View {
         .frame(width: 340, height: 272)
         .offset(y: 54)
         .scaleEffect(scale, anchor: .topLeading)
-        .frame(width: 210, height: 326 * scale, alignment: .topLeading)
+        .frame(width: iconWidth, height: 326 * scale, alignment: .topLeading)
         .onContinuousHover { phase in
             guard !motionReduced else { pointer = .zero; return }
             switch phase {
             case .active(let point):
-                pointer = CGPoint(x: min(1, max(-1, point.x / 210 * 2 - 1)),
+                pointer = CGPoint(x: min(1, max(-1, point.x / iconWidth * 2 - 1)),
                                   y: min(1, max(-1, point.y / (326 * scale) * 2 - 1)))
             case .ended: pointer = .zero
             }
@@ -122,8 +126,7 @@ struct GlassFolderView: View {
                 Color(white: dark ? 0.16 : 0.9)
             } else {
                 Rectangle().fill(.ultraThinMaterial).opacity(tintOpacity * 0.4)
-                LinearGradient(colors: dark ? [Color(white: 0.24), Color(white: 0.09)] : [Color(white: 0.92), Color(white: 0.8)], startPoint: .top, endPoint: .bottom)
-                    .opacity(tintOpacity * 0.6)
+                profile.tint.swiftUIColor.opacity(tintOpacity * 0.6)
             }
             if let artwork {
                 Image(nsImage: artwork).resizable().scaledToFill().frame(width: 364, height: 296)
@@ -142,7 +145,7 @@ struct GlassFolderView: View {
             RadialGradient(colors: [.white.opacity(0.08), .clear], center: UnitPoint(x: 0.8, y: 0), startRadius: 0, endRadius: 200)
         }
         .frame(width: 340, height: 272).clipShape(PanelPath())
-        .overlay(PanelPath().stroke((dark ? Color.white : Color(white: 0.25)).opacity(dark ? 0.5 : 0.4), lineWidth: 1.8))
+        .overlay(PanelPath().stroke(profile.keyline.swiftUIGradient, lineWidth: profile.keyline.width))
     }
 
     private var sheets: some View {
@@ -150,6 +153,7 @@ struct GlassFolderView: View {
             ForEach(Array(images.prefix(preferences.previewCount).enumerated()), id: \.offset) { index, image in
                 let count = min(images.count, preferences.previewCount)
                 let depth = Double(count - 1 - index)
+                let depthOffset = pose.depthOffset(index: index, count: count)
                 let slot = FolderPose.fanSlot(index: index, count: count)
                 let jitter = FolderPose.jitter(name: names.indices.contains(index) ? names[index] : "", index: index)
                 ZStack(alignment: .topLeading) {
@@ -164,8 +168,8 @@ struct GlassFolderView: View {
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white.opacity(dark ? 0.14 : 0.9), lineWidth: 1))
                 .shadow(color: .black.opacity(dark ? 0.5 : 0.2), radius: 9, y: 10)
                 .rotationEffect(.degrees(jitter.rotation + slot * pose.fan * preferences.animationIntensity), anchor: .bottom)
-                .offset(x: 34 + jitter.x + slot * pose.spread * preferences.animationIntensity,
-                        y: 96 + 42 + (pose.lift - 42 - depth * pose.stack) * preferences.animationIntensity)
+                .offset(x: 34 + jitter.x + slot * pose.spread * min(1.5, max(1, Double(count) / 5)) * preferences.animationIntensity,
+                        y: 96 + 42 + (pose.lift - 42 - depthOffset) * preferences.animationIntensity)
                 .animation(motionReduced ? nil : .timingCurve(0.34, 1.36, 0.5, 1, duration: 0.75 / preferences.animationSpeed)
                     .delay(depth * 0.04 / preferences.animationSpeed), value: pose)
             }
@@ -183,26 +187,26 @@ struct GlassFolderView: View {
                     .frame(width: 340, height: 272, alignment: .topLeading)
                     .blur(radius: 22).saturation(1.5).offset(y: -74)
             }
-            LinearGradient(stops: dark ? [
-                .init(color: Color(white: 0.16).opacity(tintOpacity * 0.7), location: 0),
-                .init(color: Color(white: 0.12).opacity(tintOpacity), location: 0.46),
-                .init(color: Color(white: 0.08).opacity(min(1, tintOpacity * 1.3)), location: 1)
-            ] : [
-                .init(color: Color(white: 0.94).opacity(tintOpacity * 0.7), location: 0),
-                .init(color: Color(white: 0.92).opacity(tintOpacity), location: 0.42),
-                .init(color: Color(white: 0.9).opacity(min(1, tintOpacity * 1.3)), location: 1)
+            LinearGradient(stops: [
+                .init(color: profile.tint.swiftUIColor.opacity(tintOpacity * 0.7), location: 0),
+                .init(color: profile.tint.swiftUIColor.opacity(tintOpacity), location: 0.44),
+                .init(color: profile.tint.swiftUIColor.opacity(min(1, tintOpacity * 1.3)), location: 1)
             ], startPoint: .top, endPoint: .bottom)
             RadialGradient(colors: [.white.opacity(0.22), .clear],
                            center: UnitPoint(x: 0.5 + pointer.x * 0.46, y: 0.3 + pointer.y * 0.4), startRadius: 0, endRadius: 182)
                 .blendMode(dark ? .screen : .softLight).opacity(dark ? 0.16 : 0.9)
+            if profile.showItemCount, let itemCount {
+                Text(itemCount == 1 ? "1 item" : "\(itemCount) items")
+                    .font(.system(size: 48, weight: .medium)).lineLimit(1).minimumScaleFactor(0.65)
+                    .frame(maxWidth: 270, alignment: .leading)
+                    .foregroundStyle((dark ? Color.white : Color(white: 0.12)).opacity(0.8))
+                    .padding(.horizontal, 7).padding(.vertical, 3)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 5))
+                    .offset(x: 28, y: 122)
+            }
         }
         .frame(width: 340, height: 198, alignment: .topLeading).clipShape(PanelPath(front: true))
-        .overlay(PanelPath(front: true).stroke((dark ? Color.white : Color(white: 0.22)).opacity(0.45), lineWidth: 2.4))
-        .overlay(PanelPath(front: true).stroke(LinearGradient(stops: [
-            .init(color: .white.opacity(0.95), location: 0),
-            .init(color: .white.opacity(0.35), location: 0.35),
-            .init(color: .white.opacity(0.12), location: 1)
-        ], startPoint: .top, endPoint: .bottom), lineWidth: 1.2).opacity(dark ? 0.8 : 0.9))
+        .overlay(PanelPath(front: true).stroke(profile.keyline.swiftUIGradient, lineWidth: profile.keyline.width))
         .rotation3DEffect(.degrees(pose.hinge * preferences.animationIntensity), axis: (x: 1, y: 0, z: 0), anchor: .bottom, perspective: 340 / 760)
         .offset(y: 74)
         .animation(motionReduced ? nil : .timingCurve(0.34, 1.36, 0.5, 1, duration: 0.8 / preferences.animationSpeed), value: pose)

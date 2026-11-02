@@ -34,7 +34,7 @@ struct BackgroundSettingsView: View {
                 Spacer()
             }
             DisclosureGroup("Preview Background", isExpanded: $preview) {
-                GlassFolderView(images: [], names: [], selected: false, hovered: false, preferences: previewPreferences)
+                GlassFolderView(images: [], names: [], selected: false, hovered: false, preferences: previewPreferences, displayWidth: 180)
                     .frame(maxWidth: .infinity).padding(12)
                     .background(tone == .light ? Color(white: 0.91) : Color(white: 0.16), in: RoundedRectangle(cornerRadius: 8))
             }
