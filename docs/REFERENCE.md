@@ -25,3 +25,7 @@ The supplied source contains no license text or notice. The user explicitly conf
 `PanelPath` maps the two original SVG paths into native cubic paths (22-unit quarter circles represented by their standard cubic approximation). `FolderPose` uses the exact measured state parameters and the original stable hash/random jitter. Native rendering uses matching timing curves, front tint stops, saturation/blur, reflections and a bottom hinge. Actual thumbnails replace demo sheets. The frosted front explicitly samples a duplicate of the rear/sheet layers to avoid assuming SwiftUI material samples sibling views.
 
 This is a native adaptation, not the React component running inside a web view. Apple rasterization, perspective and blur can differ from browser CSS. Visual parity has not been measured on macOS; the supplied source is the definitive reference for the Mac acceptance comparison. No pixel-perfect or 60 FPS claim is made.
+
+## Intentional v1.1 refinements
+
+At the user's request, backgrounds are now opt-in rather than always showing the original artwork. New installations start with no background in either tone and a 90% transparency target. The original Aurora/Ember assets remain available as explicit presets. Panel shapes, poses, jitter and animation timing are retained; tint opacity is controlled consistently across tones and the keyline is independent of the background. Reduce Transparency is an accessibility override. Independent custom images and a dot preset are new native features, not part of the supplied upstream implementation.

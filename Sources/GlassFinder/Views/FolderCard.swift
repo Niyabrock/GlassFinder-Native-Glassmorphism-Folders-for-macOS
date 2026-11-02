@@ -32,11 +32,11 @@ struct FolderCard: View {
         .frame(width: 218, height: 250)
         .contentShape(Rectangle())
         .overlay {
-            FolderClickSurface(single: { model.selection = folder.id }, double: { model.open(folder) }, key: { code in
+            FolderClickSurface(single: { model.select(folder.id) }, double: { model.selection = folder.id; model.open(folder) }, key: { code in
                 switch code {
                 case 123, 126: model.moveSelection(-1)
                 case 124, 125: model.moveSelection(1)
-                case 53: model.selection = nil
+                case 53: model.dismissSelection()
                 case 36, 49:
                     if let selected = model.folders.first(where: { $0.id == model.selection }) { model.open(selected) }
                 default: return false
@@ -47,6 +47,7 @@ struct FolderCard: View {
         }
         .onHover { hovered = $0 }
         .onChange(of: model.preferences.isEnabled) { _, enabled in if !enabled { hovered = false } }
+        .onChange(of: model.interactionGeneration) { _, _ in hovered = false }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(folder.url.lastPathComponent)
         .accessibilityValue(selected ? "Selected folder" : "Folder")
@@ -72,7 +73,7 @@ private struct FolderClickSurface: NSViewRepresentable {
         view.single = single; view.double = double; view.key = key; view.url = url
     }
 
-    final class ClickView: NSView, NSDraggingSource {
+    final class ClickView: NSView, NSDraggingSource, FolderInteractionRegion {
         var single: (() -> Void)?
         var double: (() -> Void)?
         var key: ((UInt16) -> Bool)?
@@ -85,8 +86,8 @@ private struct FolderClickSurface: NSViewRepresentable {
         override func mouseDown(with event: NSEvent) {
             window?.makeFirstResponder(self)
             down = event.locationInWindow
-            single?()
-            if event.clickCount == 2 { double?() }
+            if event.clickCount == 1 { single?() }
+            else if event.clickCount == 2 { double?() }
         }
         override func mouseDragged(with event: NSEvent) {
             guard let down, hypot(event.locationInWindow.x - down.x, event.locationInWindow.y - down.y) > 5,

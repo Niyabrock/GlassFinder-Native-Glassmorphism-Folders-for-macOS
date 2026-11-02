@@ -32,11 +32,10 @@ struct BrowserView: View {
                 }
             }
             .background {
-                LinearGradient(colors: [Color.cyan.opacity(0.08), Color.purple.opacity(0.07), Color.clear], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    .contentShape(Rectangle()).onTapGesture { model.selection = nil; focused = true }
+                Color(nsColor: .windowBackgroundColor)
             }
             .focusable().focusEffectDisabled().focused($focused)
-            .onKeyPress(.escape) { model.selection = nil; return .handled }
+            .onKeyPress(.escape) { model.dismissSelection(); return .handled }
             .onKeyPress(.leftArrow) { model.moveSelection(-1); return .handled }
             .onKeyPress(.rightArrow) { model.moveSelection(1); return .handled }
             .onKeyPress(.upArrow) { model.moveSelection(-1); return .handled }
@@ -52,6 +51,7 @@ struct BrowserView: View {
             }.padding(12)
         }
         .frame(minWidth: 540, minHeight: 450)
+        .background(BrowserDismissalMonitor { model.dismissSelection() })
         .toolbar {
             Button { model.chooseFolders() } label: { Label("Add Folders", systemImage: "folder.badge.plus") }
             Button { model.refreshAll() } label: { Label("Refresh Previews", systemImage: "arrow.clockwise") }

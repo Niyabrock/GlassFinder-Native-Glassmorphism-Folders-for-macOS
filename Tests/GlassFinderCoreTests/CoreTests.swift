@@ -32,8 +32,46 @@ final class CoreTests: XCTestCase {
         preferences.normalize()
         XCTAssertEqual(preferences.previewCount, 5)
         XCTAssertEqual(preferences.animationSpeed, 0.5)
-        XCTAssertEqual(preferences.transparency, 0.55)
+        XCTAssertEqual(preferences.transparency, 0.9)
         XCTAssertEqual(try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences)), preferences)
+    }
+
+    func testBackgroundsAreIndependentAndPersist() throws {
+        var preferences = Preferences()
+        XCTAssertEqual(preferences.lightBackground, .none)
+        XCTAssertEqual(preferences.darkBackground, .none)
+        XCTAssertEqual(preferences.transparency, 0.9)
+        preferences.setBackground(.custom, for: .light)
+        preferences.setBackground(.dots, for: .dark)
+        let restored = try JSONDecoder().decode(Preferences.self, from: JSONEncoder().encode(preferences))
+        XCTAssertEqual(restored.background(for: .light), .custom)
+        XCTAssertEqual(restored.background(for: .dark), .dots)
+        preferences.setBackground(.none, for: .light)
+        XCTAssertEqual(preferences.darkBackground, .dots)
+    }
+
+    func testLegacyPreferencesMigrateWithoutLosingUserSettings() throws {
+        let json = Data(#"{"isEnabled":false,"appearance":"dark","transparency":0.55,"previewCount":3,"animationSpeed":1.5,"globalShortcut":true}"#.utf8)
+        let saved = try JSONDecoder().decode(Preferences.self, from: json)
+        XCTAssertFalse(saved.isEnabled)
+        XCTAssertEqual(saved.appearance, .dark)
+        XCTAssertEqual(saved.transparency, 0.55)
+        XCTAssertEqual(saved.animationSpeed, 1.5)
+        XCTAssertEqual(saved.previewCount, 3)
+        XCTAssertTrue(saved.globalShortcut)
+        XCTAssertEqual(saved.lightBackground, .none)
+        XCTAssertEqual(saved.darkBackground, .none)
+    }
+
+    func testClickAgainCollapsesAndAnotherFolderTransfersSelection() {
+        let first = UUID(), second = UUID()
+        var selected = FolderSelection.click(current: nil, folder: first)
+        XCTAssertEqual(selected, first)
+        selected = FolderSelection.click(current: selected, folder: first)
+        XCTAssertNil(selected)
+        selected = FolderSelection.click(current: first, folder: second)
+        XCTAssertEqual(selected, second)
+        XCTAssertEqual(FolderPose.resolve(selected: false, hovered: false, hoverEnabled: true), .closed)
     }
 
     func testCatalogUsesActualContentsAndDoesNotMutateFiles() async throws {

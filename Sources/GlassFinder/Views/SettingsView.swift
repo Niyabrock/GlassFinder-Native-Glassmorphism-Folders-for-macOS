@@ -15,9 +15,15 @@ struct SettingsView: View {
                 Stepper("Preview items: \(model.preferences.previewCount)", value: $model.preferences.previewCount, in: 3...5)
                 slider("Animation speed", value: $model.preferences.animationSpeed, range: 0.5...2)
                 slider("Animation intensity", value: $model.preferences.animationIntensity, range: 0...1.5)
-                slider("Glass transparency", value: $model.preferences.transparency, range: 0.15...0.85)
+                slider("Glass transparency", value: $model.preferences.transparency, range: 0.15...0.95)
                 Toggle("Reduce motion", isOn: $model.preferences.reduceMotion)
                 Text("System Reduce Motion and Reduce Transparency are always respected.").font(.caption).foregroundStyle(.secondary)
+            }
+            Section("Folder Backgrounds") {
+                BackgroundSettingsView(tone: .light)
+                BackgroundSettingsView(tone: .dark)
+                Text("Light and Dark backgrounds are saved separately. Automatic follows the system appearance. Imported images are copied into GlassFinder’s Application Support folder; originals stay unchanged.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("System") {
                 Toggle("Launch at Login", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))

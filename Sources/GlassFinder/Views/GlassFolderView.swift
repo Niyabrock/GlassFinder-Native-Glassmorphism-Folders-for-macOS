@@ -59,6 +59,7 @@ struct GlassFolderView: View {
     let selected: Bool
     let hovered: Bool
     let preferences: Preferences
+    @EnvironmentObject private var backgrounds: BackgroundStore
     @Environment(\.colorScheme) private var systemScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
@@ -69,11 +70,21 @@ struct GlassFolderView: View {
     }
     private var motionReduced: Bool { systemReduceMotion || preferences.reduceMotion }
     private var pose: FolderPose { .resolve(selected: selected, hovered: hovered, hoverEnabled: preferences.hoverPreviews) }
-    private var artwork: NSImage? { dark ? ArtworkAssets.dark : ArtworkAssets.light }
+    private var tone: BackgroundTone { dark ? .dark : .light }
+    private var background: FolderBackground { preferences.background(for: tone) }
+    private var artwork: NSImage? {
+        switch background {
+        case .aurora: return ArtworkAssets.light
+        case .ember: return ArtworkAssets.dark
+        case .custom: return backgrounds.image(for: tone)
+        default: return nil
+        }
+    }
+    private var tintOpacity: Double { 1 - preferences.transparency }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            Capsule().fill(.black.opacity(dark ? 0.62 : 0.34))
+            Capsule().fill(.black.opacity(dark ? 0.24 : 0.12))
                 .frame(width: 304, height: 60).blur(radius: 22).offset(x: 18, y: 218)
             ZStack(alignment: .topLeading) {
                 rear
@@ -100,22 +111,38 @@ struct GlassFolderView: View {
             }
         }
         .animation(motionReduced ? nil : .timingCurve(0.2, 0.8, 0.2, 1, duration: 0.9 / preferences.animationSpeed), value: pointer)
+        .onChange(of: hovered) { _, active in if !active { pointer = .zero } }
         .environment(\.colorScheme, dark ? .dark : .light)
         .accessibilityHidden(true)
     }
 
     private var rear: some View {
         ZStack {
-            LinearGradient(colors: dark ? [Color(white: 0.165), Color(white: 0.071)] : [Color(white: 0.953), Color(white: 0.89)], startPoint: .top, endPoint: .bottom)
+            if reduceTransparency {
+                Color(white: dark ? 0.16 : 0.9)
+            } else {
+                Rectangle().fill(.ultraThinMaterial).opacity(tintOpacity * 0.4)
+                LinearGradient(colors: dark ? [Color(white: 0.24), Color(white: 0.09)] : [Color(white: 0.92), Color(white: 0.8)], startPoint: .top, endPoint: .bottom)
+                    .opacity(tintOpacity * 0.6)
+            }
             if let artwork {
                 Image(nsImage: artwork).resizable().scaledToFill().frame(width: 364, height: 296)
                     .offset(x: -pointer.x * 7, y: -pointer.y * 6)
             }
-            LinearGradient(stops: [.init(color: .white.opacity(0.22), location: 0), .init(color: .clear, location: 0.22)], startPoint: .top, endPoint: .bottom)
-            RadialGradient(colors: [.white.opacity(0.16), .clear], center: UnitPoint(x: 0.8, y: 0), startRadius: 0, endRadius: 200)
+            if background == .dots {
+                Canvas { context, size in
+                    for x in stride(from: 8.0, to: size.width, by: 18) {
+                        for y in stride(from: 8.0, to: size.height, by: 18) {
+                            context.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 2, height: 2)), with: .color((dark ? Color.white : .black).opacity(0.18)))
+                        }
+                    }
+                }
+            }
+            LinearGradient(stops: [.init(color: .white.opacity(0.10), location: 0), .init(color: .clear, location: 0.22)], startPoint: .top, endPoint: .bottom)
+            RadialGradient(colors: [.white.opacity(0.08), .clear], center: UnitPoint(x: 0.8, y: 0), startRadius: 0, endRadius: 200)
         }
         .frame(width: 340, height: 272).clipShape(PanelPath())
-        .overlay(PanelPath().stroke(.white.opacity(dark ? 0.16 : 0.45), lineWidth: 1))
+        .overlay(PanelPath().stroke((dark ? Color.white : Color(white: 0.25)).opacity(dark ? 0.5 : 0.4), lineWidth: 1.8))
     }
 
     private var sheets: some View {
@@ -157,25 +184,25 @@ struct GlassFolderView: View {
                     .blur(radius: 22).saturation(1.5).offset(y: -74)
             }
             LinearGradient(stops: dark ? [
-                .init(color: Color(red: 18/255, green: 18/255, blue: 20/255).opacity(0.18), location: 0),
-                .init(color: Color(red: 14/255, green: 14/255, blue: 16/255).opacity(0.62), location: 0.46),
-                .init(color: Color(red: 8/255, green: 8/255, blue: 10/255).opacity(0.94), location: 1)
+                .init(color: Color(white: 0.16).opacity(tintOpacity * 0.7), location: 0),
+                .init(color: Color(white: 0.12).opacity(tintOpacity), location: 0.46),
+                .init(color: Color(white: 0.08).opacity(min(1, tintOpacity * 1.3)), location: 1)
             ] : [
-                .init(color: .white.opacity(0.16), location: 0),
-                .init(color: .white.opacity(0.5), location: 0.42),
-                .init(color: Color(white: 252/255).opacity(0.93), location: 1)
+                .init(color: Color(white: 0.94).opacity(tintOpacity * 0.7), location: 0),
+                .init(color: Color(white: 0.92).opacity(tintOpacity), location: 0.42),
+                .init(color: Color(white: 0.9).opacity(min(1, tintOpacity * 1.3)), location: 1)
             ], startPoint: .top, endPoint: .bottom)
-            .opacity(min(1, max(0.2, 1.55 - preferences.transparency)))
-            RadialGradient(colors: [.white.opacity(0.5), .clear],
+            RadialGradient(colors: [.white.opacity(0.22), .clear],
                            center: UnitPoint(x: 0.5 + pointer.x * 0.46, y: 0.3 + pointer.y * 0.4), startRadius: 0, endRadius: 182)
                 .blendMode(dark ? .screen : .softLight).opacity(dark ? 0.16 : 0.9)
         }
         .frame(width: 340, height: 198, alignment: .topLeading).clipShape(PanelPath(front: true))
+        .overlay(PanelPath(front: true).stroke((dark ? Color.white : Color(white: 0.22)).opacity(0.45), lineWidth: 2.4))
         .overlay(PanelPath(front: true).stroke(LinearGradient(stops: [
             .init(color: .white.opacity(0.95), location: 0),
             .init(color: .white.opacity(0.35), location: 0.35),
             .init(color: .white.opacity(0.12), location: 1)
-        ], startPoint: .top, endPoint: .bottom), lineWidth: 2.4).opacity(dark ? 0.55 : 1))
+        ], startPoint: .top, endPoint: .bottom), lineWidth: 1.2).opacity(dark ? 0.8 : 0.9))
         .rotation3DEffect(.degrees(pose.hinge * preferences.animationIntensity), axis: (x: 1, y: 0, z: 0), anchor: .bottom, perspective: 340 / 760)
         .offset(y: 74)
         .animation(motionReduced ? nil : .timingCurve(0.34, 1.36, 0.5, 1, duration: 0.8 / preferences.animationSpeed), value: pose)

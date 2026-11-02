@@ -16,7 +16,7 @@ struct GlassFinderApp: App {
 
     var body: some Scene {
         WindowGroup("GlassFinder", id: "browser") {
-            BrowserView().environmentObject(model)
+            BrowserView().environmentObject(model).environmentObject(model.backgrounds)
                 .onAppear { delegate.model = model }
         }
         .defaultSize(width: 820, height: 580)
@@ -26,7 +26,7 @@ struct GlassFinderApp: App {
                 Toggle("Enable GlassFinder", isOn: $model.preferences.isEnabled)
             }
         }
-        Settings { SettingsView().environmentObject(model) }
+        Settings { SettingsView().environmentObject(model).environmentObject(model.backgrounds) }
         MenuBarExtra("GlassFinder", systemImage: model.preferences.isEnabled ? "folder.fill" : "folder") {
             MenuControls().environmentObject(model)
         }

@@ -8,6 +8,7 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "14.5"
     CODE_SIGN_STYLE: Automatic
     ENABLE_APP_SANDBOX: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
 targets:
   GlassFinderCore:
     type: framework
@@ -33,6 +34,14 @@ targets:
     dependencies:
       - target: GlassFinderCore
         embed: true
+    preBuildScripts:
+      - name: Generate application icon
+        script: '"$SRCROOT/scripts/make-icon.sh"'
+        basedOnDependencyAnalysis: false
+    postBuildScripts:
+      - name: Copy application icon
+        script: 'cp "$SRCROOT/build/AppIcon.icns" "$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/AppIcon.icns"'
+        basedOnDependencyAnalysis: false
   GlassFinderCoreTests:
     type: bundle.unit-test
     platform: macOS

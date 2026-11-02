@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import ServiceManagement
 import GlassFinderCore
+import UniformTypeIdentifiers
 
 @MainActor
 final class FolderItem: ObservableObject, Identifiable {
@@ -31,11 +32,13 @@ final class AppModel: ObservableObject {
     }
     @Published var folders: [FolderItem] = []
     @Published var selection: UUID?
+    @Published var interactionGeneration = 0
     @Published var error: String?
     @Published var shortcutStatus = "Disabled"
     @Published var loginStatus = ""
     @Published var launchAtLogin = false
     let thumbnails = ThumbnailService()
+    let backgrounds = BackgroundStore()
     private let catalog = FileCatalog()
     private let defaults: UserDefaults
     private let shortcut = GlobalShortcut()
@@ -68,6 +71,34 @@ final class AppModel: ObservableObject {
         panel.prompt = "Add Folders"
         panel.message = "GlassFinder only reads previews. Your folders and icons remain unchanged."
         if panel.runModal() == .OK { add(panel.urls) }
+    }
+
+    func select(_ id: UUID) { selection = FolderSelection.click(current: selection, folder: id) }
+
+    func dismissSelection() {
+        selection = nil
+        interactionGeneration += 1 // Also clear hover when a mouse-exit event was lost to a window transition.
+    }
+
+    func chooseBackground(for tone: BackgroundTone) {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Use Background"
+        if panel.runModal() == .OK, let url = panel.url {
+            do {
+                try backgrounds.importImage(url, for: tone)
+                preferences.setBackground(.custom, for: tone)
+            } catch { self.error = "Could not import background: \(error.localizedDescription)" }
+        }
+    }
+
+    func removeBackground(for tone: BackgroundTone) {
+        do {
+            try backgrounds.remove(tone)
+            preferences.setBackground(.none, for: tone)
+        } catch { self.error = "Could not remove background: \(error.localizedDescription)" }
     }
 
     func add(_ urls: [URL]) {
@@ -108,7 +139,7 @@ final class AppModel: ObservableObject {
     }
 
     private func applyEnabled() {
-        selection = nil
+        dismissSelection()
         if preferences.isEnabled { refreshAll() }
         else {
             for folder in folders { stop(folder) }

@@ -6,8 +6,10 @@
     <key>CFBundleDisplayName</key><string>GlassFinder</string>
     <key>CFBundleExecutable</key><string>GlassFinder</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.1.0</string>
-    <key>CFBundleVersion</key><string>1</string>
+    <key>CFBundleShortVersionString</key><string>1.1.0</string>
+    <key>CFBundleVersion</key><string>11</string>
+    <key>CFBundleIconFile</key><string>AppIcon</string>
+    <key>NSHumanReadableCopyright</key><string>GlassFinder. See repository documentation for artwork attribution.</string>
     <key>LSMinimumSystemVersion</key><string>14.5</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
