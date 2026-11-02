@@ -1,12 +1,15 @@
 import XCTest
 @testable import GlassFinderCore
+#if os(macOS)
+import AppKit // Exercise qualified color references with the conflicting system type in scope.
+#endif
 
 final class CustomizationTests: XCTestCase {
     func testIndependentProfilesAndGradientPersistence() throws {
         var preferences = Preferences()
         let dark = preferences.darkProfile
         preferences.lightProfile.transparency = 0.43
-        preferences.lightProfile.tint = RGBColor(0.8, 0.2, 0.4)
+        preferences.lightProfile.tint = GlassFinderCore.RGBColor(0.8, 0.2, 0.4)
         preferences.lightProfile.keyline.addStop(at: 0.72)
         preferences.lightProfile.keyline.angle = 147
         preferences.lightProfile.showItemCount = true
@@ -45,8 +48,8 @@ final class CustomizationTests: XCTestCase {
 
     func testGradientInterpolationAndStopEditing() throws {
         var gradient = KeylineGradient.defaults(for: .light)
-        gradient.stops = [KeylineStop(position: 0, color: RGBColor(0, 0, 0), opacity: 0.2),
-                          KeylineStop(position: 1, color: RGBColor(1, 1, 1), opacity: 0.8)]
+        gradient.stops = [KeylineStop(position: 0, color: GlassFinderCore.RGBColor(0, 0, 0), opacity: 0.2),
+                          KeylineStop(position: 1, color: GlassFinderCore.RGBColor(1, 1, 1), opacity: 0.8)]
         let id = try XCTUnwrap(gradient.addStop(at: 0.25))
         let stop = try XCTUnwrap(gradient.stops.first { $0.id == id })
         XCTAssertEqual(stop.color.red, 0.25, accuracy: 0.0001)
@@ -64,9 +67,9 @@ final class CustomizationTests: XCTestCase {
     }
 
     func testGradientBoundsAndHexValidation() {
-        XCTAssertEqual(RGBColor(hex: "#80A0FF")?.hex, "#80A0FF")
-        XCTAssertNil(RGBColor(hex: "#12345G"))
-        XCTAssertNil(RGBColor(hex: "#1234567"))
+        XCTAssertEqual(GlassFinderCore.RGBColor(hex: "#80A0FF")?.hex, "#80A0FF")
+        XCTAssertNil(GlassFinderCore.RGBColor(hex: "#12345G"))
+        XCTAssertNil(GlassFinderCore.RGBColor(hex: "#1234567"))
         var gradient = KeylineGradient.defaults(for: .dark)
         for _ in 0..<20 { gradient.addStop(at: 0.5) }
         XCTAssertEqual(gradient.stops.count, 12)

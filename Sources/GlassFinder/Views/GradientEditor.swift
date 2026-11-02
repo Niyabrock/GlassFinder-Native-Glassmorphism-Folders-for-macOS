@@ -2,7 +2,9 @@ import SwiftUI
 import AppKit
 import GlassFinderCore
 
-extension RGBColor {
+// AppKit also exposes the legacy QuickDraw RGBColor (16-bit channels).
+// Extend only the shared normalized, Codable profile color.
+extension GlassFinderCore.RGBColor {
     var swiftUIColor: Color { Color(red: red, green: green, blue: blue) }
     init(color: Color) {
         let rgb = NSColor(color).usingColorSpace(.sRGB) ?? .gray
@@ -87,15 +89,15 @@ struct GradientEditor: View {
                         TextField("Position percent", value: Binding(get: { selected?.position ?? 0 }, set: { value in edit(stop.id) { $0.position = value } }).percent,
                                   format: .number.precision(.fractionLength(1)))
                             .frame(width: 65)
-                        ColorPicker("Stop Color", selection: Binding(get: { stop.color.swiftUIColor }, set: { color in edit(stop.id) { $0.color = RGBColor(color: color) } }), supportsOpacity: false)
+                        ColorPicker("Stop Color", selection: Binding(get: { stop.color.swiftUIColor }, set: { color in edit(stop.id) { $0.color = GlassFinderCore.RGBColor(color: color) } }), supportsOpacity: false)
                     }
                     HStack {
                         TextField("Hex #RRGGBB", text: $hex).textFieldStyle(.roundedBorder).frame(width: 115)
                             .accessibilityLabel("Stop hexadecimal color")
                             .onChange(of: hex) { _, value in
-                                if let rgb = RGBColor(hex: value) { edit(stop.id) { $0.color = rgb } }
+                                if let rgb = GlassFinderCore.RGBColor(hex: value) { edit(stop.id) { $0.color = rgb } }
                             }
-                        if RGBColor(hex: hex) == nil { Text("Use #RRGGBB").font(.caption).foregroundStyle(.secondary) }
+                        if GlassFinderCore.RGBColor(hex: hex) == nil { Text("Use #RRGGBB").font(.caption).foregroundStyle(.secondary) }
                         Spacer()
                         Text("Opacity")
                         Slider(value: Binding(get: { stop.opacity }, set: { value in edit(stop.id) { $0.opacity = value } }), in: 0...1)

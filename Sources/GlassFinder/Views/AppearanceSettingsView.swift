@@ -25,7 +25,7 @@ struct AppearanceSettingsView: View {
                 Text(profile.wrappedValue.transparency, format: .percent.precision(.fractionLength(0))).monospacedDigit()
             }
             ColorPicker("Glass Tint", selection: Binding(get: { profile.wrappedValue.tint.swiftUIColor }, set: { color in
-                profile.wrappedValue.tint = RGBColor(color: color)
+                profile.wrappedValue.tint = GlassFinderCore.RGBColor(color: color)
             }), supportsOpacity: false)
             Toggle("Show Item Count", isOn: profile.showItemCount)
             Text("Counts immediate children, including hidden items; never counts inside subfolders.")
