@@ -1,0 +1,15 @@
+name: macOS build and core tests
+on: [push, pull_request]
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report Apple toolchain (deployment target remains Sonoma 14.5)
+        run: xcodebuild -version
+      - name: Test and package Apple Silicon app
+        run: ./scripts/check.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GlassFinder-development-arm64
+          path: build/GlassFinder.app
