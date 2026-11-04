@@ -21,8 +21,8 @@ struct BrowserDismissalMonitor: NSViewRepresentable {
             stop()
             guard let window else { return }
             monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self, weak window] event in
-                guard let self, let window else { return event }
-                if event.window === window, let content = window.contentView {
+                guard let self, let window, event.window === window else { return event }
+                if let content = window.contentView {
                     let point = content.superview?.convert(event.locationInWindow, from: nil) ?? event.locationInWindow
                     var hit = content.hitTest(point)
                     while let view = hit {
@@ -36,7 +36,9 @@ struct BrowserDismissalMonitor: NSViewRepresentable {
             let center = NotificationCenter.default
             for name in [NSWindow.didResignKeyNotification, NSWindow.willCloseNotification] {
                 observers.append(center.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
-                    Task { @MainActor in
+                    // queue: .main guarantees isolation. Dismiss before the new window handles
+                    // its click, rather than scheduling a task that clears its fresh selection.
+                    MainActor.assumeIsolated {
                         self?.dismiss?()
                         if name == NSWindow.willCloseNotification { self?.stop() }
                     }

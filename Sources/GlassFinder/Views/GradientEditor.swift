@@ -92,11 +92,11 @@ struct GradientEditor: View {
                         ColorPicker("Stop Color", selection: Binding(get: { stop.color.swiftUIColor }, set: { color in edit(stop.id) { $0.color = GlassFinderCore.RGBColor(color: color) } }), supportsOpacity: false)
                     }
                     HStack {
-                        TextField("Hex #RRGGBB", text: $hex).textFieldStyle(.roundedBorder).frame(width: 115)
+                        TextField("Hex #RRGGBB", text: Binding(get: { hex }, set: { value in
+                            hex = value
+                            if let rgb = GlassFinderCore.RGBColor(hex: value) { edit(stop.id) { $0.color = rgb } }
+                        })).textFieldStyle(.roundedBorder).frame(width: 115)
                             .accessibilityLabel("Stop hexadecimal color")
-                            .onChange(of: hex) { _, value in
-                                if let rgb = GlassFinderCore.RGBColor(hex: value) { edit(stop.id) { $0.color = rgb } }
-                            }
                         if GlassFinderCore.RGBColor(hex: hex) == nil { Text("Use #RRGGBB").font(.caption).foregroundStyle(.secondary) }
                         Spacer()
                         Text("Opacity")
