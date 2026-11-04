@@ -12,11 +12,11 @@ jobs:
       - name: Build development Universal 2 installer
         run: |
           ./scripts/package-dmg.sh universal
-          ditto -c -k --sequesterRsrc --keepParent build/GlassFinder.app build/GlassFinder-1.2.0-universal.app.zip
+          ditto -c -k --sequesterRsrc --keepParent 'build/Glass Folder.app' build/Glass-Folder-1.2.0-universal.app.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: GlassFinder-1.2-development-universal
+          name: Glass-Folder-development-universal
           path: |
-            build/GlassFinder-1.2.0-universal.dmg
-            build/GlassFinder-1.2.0-universal.app.zip
+            build/Glass-Folder-1.2.0-universal.dmg
+            build/Glass-Folder-1.2.0-universal.app.zip
           if-no-files-found: error

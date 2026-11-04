@@ -2,14 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
     <key>CFBundleIdentifier</key><string>com.glassfinder.app</string>
-    <key>CFBundleName</key><string>GlassFinder</string>
-    <key>CFBundleDisplayName</key><string>GlassFinder</string>
+    <key>CFBundleName</key><string>Glass Folder</string>
+    <key>CFBundleDisplayName</key><string>Glass Folder</string>
     <key>CFBundleExecutable</key><string>GlassFinder</string>
     <key>CFBundlePackageType</key><string>APPL</string>
     <key>CFBundleShortVersionString</key><string>1.2.0</string>
-    <key>CFBundleVersion</key><string>12</string>
+    <key>CFBundleVersion</key><string>13</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
-    <key>NSHumanReadableCopyright</key><string>GlassFinder. See repository documentation for artwork attribution.</string>
+    <key>NSHumanReadableCopyright</key><string>Glass Folder. See repository documentation for artwork attribution.</string>
     <key>LSMinimumSystemVersion</key><string>14.5</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>

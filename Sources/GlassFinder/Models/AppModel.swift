@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 
 @MainActor
 final class FolderItem: ObservableObject, Identifiable {
-    let id = UUID()
+    let id: UUID
     var url: URL
     var bookmark: Data?
     var scoped = false
@@ -14,11 +14,14 @@ final class FolderItem: ObservableObject, Identifiable {
     @Published var images: [NSImage] = []
     @Published var message: String?
     @Published var itemCount: Int?
+    @Published var customization: FolderCustomization
     var task: Task<Void, Never>?
     var monitor: DirectoryMonitor?
     var revision = UUID()
 
-    init(url: URL, bookmark: Data?) { self.url = url; self.bookmark = bookmark }
+    init(id: UUID = UUID(), url: URL, bookmark: Data?, customization: FolderCustomization = .init()) {
+        self.id = id; self.url = url; self.bookmark = bookmark; self.customization = customization
+    }
 }
 
 @MainActor
@@ -38,6 +41,7 @@ final class AppModel: ObservableObject {
     @Published var shortcutStatus = "Disabled"
     @Published var loginStatus = ""
     @Published var launchAtLogin = false
+    @Published var customizingFolder: FolderItem?
     let thumbnails = ThumbnailService()
     let backgrounds = BackgroundStore()
     private let catalog = FileCatalog()
@@ -45,6 +49,8 @@ final class AppModel: ObservableObject {
     private let shortcut = GlobalShortcut()
     private var observers: [NSObjectProtocol] = []
     private var stopped = false
+    private var unresolvedFolders: [SavedFolder] = []
+    private var canPersistFolders = true
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -70,11 +76,32 @@ final class AppModel: ObservableObject {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
         panel.prompt = "Add Folders"
-        panel.message = "GlassFinder only reads previews. Your folders and icons remain unchanged."
+        panel.message = "Glass Folder only reads previews. Your folders and icons remain unchanged."
         if panel.runModal() == .OK { add(panel.urls) }
     }
 
     func select(_ id: UUID) { selection = FolderSelection.click(current: selection, folder: id) }
+
+    func setFolderTint(_ tint: FolderTint?, for folder: FolderItem) {
+        folder.customization.tint = tint; persistFolders()
+    }
+
+    func setFolderPlacement(_ placement: ImagePlacement?, for folder: FolderItem, tone: BackgroundTone) {
+        folder.customization.setPlacement(placement, for: tone); persistFolders()
+    }
+
+    func exportStaticIcon(for folder: FolderItem, tone: BackgroundTone) {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.nameFieldStringValue = folder.url.lastPathComponent + "-glass-icon.png"
+        panel.title = "Export Static Folder Icon"
+        panel.message = "Exports an image only. It does not apply an icon or change Finder or Desktop folders."
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let data = try StaticIconExporter.png(preferences: folder.customization.applying(to: preferences), backgrounds: backgrounds, tone: tone)
+            try data.write(to: url, options: .atomic)
+        } catch { self.error = "Could not export icon: \(error.localizedDescription)" }
+    }
 
     func dismissSelection() {
         selection = nil
@@ -108,6 +135,7 @@ final class AppModel: ObservableObject {
                   !folders.contains(where: { $0.url.standardizedFileURL == url.standardizedFileURL }) else { continue }
             let access = url.startAccessingSecurityScopedResource()
             let bookmark = try? url.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
+            if bookmark == nil { error = "This folder could not be bookmarked. It can be used during this session, but its settings cannot be saved." }
             if access { url.stopAccessingSecurityScopedResource() }
             let folder = FolderItem(url: url, bookmark: bookmark)
             folders.append(folder)
@@ -205,12 +233,29 @@ final class AppModel: ObservableObject {
     }
 
     private func persistFolders() {
-        // Persist only bookmarks, never a directory listing or preview data.
-        defaults.set(folders.compactMap(\.bookmark), forKey: "folderBookmarks.v1")
+        guard canPersistFolders else { return }
+        let records = folders.compactMap { folder in
+            folder.bookmark.map { SavedFolder(id: folder.id, bookmark: $0, customization: folder.customization) }
+        } + unresolvedFolders
+        if let data = try? JSONEncoder().encode(records) { defaults.set(data, forKey: "folderRecords.v1") }
+        // Keep the old bookmark key available for compatibility; no folder listing is persisted.
+        defaults.set(records.map(\.bookmark), forKey: "folderBookmarks.v1")
     }
 
     private func restoreFolders() {
-        for data in defaults.array(forKey: "folderBookmarks.v1") as? [Data] ?? [] {
+        let records: [SavedFolder]
+        if let data = defaults.data(forKey: "folderRecords.v1") {
+            guard let saved = try? JSONDecoder().decode([SavedFolder].self, from: data) else {
+                canPersistFolders = false
+                error = "Saved folder settings could not be read. They were preserved without overwriting them."
+                return
+            }
+            records = saved
+        } else {
+            records = (defaults.array(forKey: "folderBookmarks.v1") as? [Data] ?? []).map { SavedFolder(id: UUID(), bookmark: $0) }
+        }
+        for record in records {
+            let data = record.bookmark
             var stale = false
             if let url = try? URL(resolvingBookmarkData: data, options: [.withSecurityScope, .withoutUI],
                                   relativeTo: nil, bookmarkDataIsStale: &stale) {
@@ -220,9 +265,13 @@ final class AppModel: ObservableObject {
                     bookmark = (try? url.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)) ?? data
                     if access { url.stopAccessingSecurityScopedResource() }
                 }
-                folders.append(FolderItem(url: url, bookmark: bookmark))
-            } else { error = "A saved folder is unavailable. Reconnect its drive or add it again." }
+                folders.append(FolderItem(id: record.id, url: url, bookmark: bookmark, customization: record.customization))
+            } else {
+                unresolvedFolders.append(record)
+                error = "A saved folder is unavailable. Reconnect its drive and relaunch. Its custom settings were retained."
+            }
         }
+        persistFolders()
     }
 
     private func configureShortcut() {

@@ -16,6 +16,12 @@ struct BackgroundSettingsView: View {
         preferences.appearance = tone == .light ? .light : .dark
         return preferences
     }
+    private var placement: Binding<ImagePlacement> {
+        Binding(get: { model.preferences.profile(for: tone).imagePlacement }, set: { value in
+            var profile = model.preferences.profile(for: tone)
+            profile.imagePlacement = value; model.preferences.setProfile(profile, for: tone)
+        })
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -32,6 +38,11 @@ struct BackgroundSettingsView: View {
                 Button("Choose Custom Image…") { model.chooseBackground(for: tone) }
                 Button("Remove / Reset") { model.removeBackground(for: tone) }
                 Spacer()
+            }
+            if selection.wrappedValue == .custom, backgrounds.image(for: tone) != nil {
+                DisclosureGroup("Image Position and Size") {
+                    ImagePlacementEditor(placement: placement, preferences: previewPreferences)
+                }
             }
             DisclosureGroup("Preview Background", isExpanded: $preview) {
                 GlassFolderView(images: [], names: [], selected: false, hovered: false, preferences: previewPreferences, displayWidth: 180)

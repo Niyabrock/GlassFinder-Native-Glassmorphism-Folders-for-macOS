@@ -10,7 +10,10 @@ with (root / "Resources/Info.plist").open("rb") as handle:
 assert info["LSMinimumSystemVersion"] == "14.5"
 assert info["CFBundleExecutable"] == "GlassFinder"
 assert info["CFBundleIdentifier"] == "com.glassfinder.app"
+assert info["CFBundleDisplayName"] == "Glass Folder"
+assert info["CFBundleName"] == "Glass Folder"
 assert info["CFBundleShortVersionString"] == "1.2.0"
+assert info["CFBundleVersion"] == "13"
 assert info["CFBundleIconFile"] == "AppIcon"
 sources = list((root / "Sources").rglob("*.swift"))
 assert len(sources) >= 10

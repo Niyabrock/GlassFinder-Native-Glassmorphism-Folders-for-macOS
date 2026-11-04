@@ -1,5 +1,7 @@
 # GlassFinder 1.1 development release
 
+Historical guide retained for the former app name and its build outputs. For the renamed application, use [Glass Folder instructions](GLASS-FOLDER.md).
+
 ## Scope and preservation
 
 This branch starts at the working prototype commit `acdbf24`. The user reports that prototype builds and runs in Xcode. Version 1.1 changes its presentation and dismissal behavior without replacing the app architecture, folder geometry, pose values, spring timing, filesystem previews, master switch, menu bar or login implementation. The original branch remains intact. Nothing is merged into `main` automatically.

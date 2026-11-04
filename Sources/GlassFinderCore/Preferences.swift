@@ -11,7 +11,7 @@ public enum FolderBackground: String, Codable, CaseIterable, Hashable, Sendable 
 
 public struct Preferences: Codable, Equatable, Sendable {
     public var isEnabled = true
-    public var appearance: GlassAppearance = .automatic
+    public var appearance: GlassAppearance = .dark
     public var animationSpeed = 1.0
     public var animationIntensity = 1.0
     public var hoverPreviews = true
@@ -38,7 +38,7 @@ public struct Preferences: Codable, Equatable, Sendable {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         // Additive migration: retain v1 settings rather than discarding them when new keys are absent.
         isEnabled = try values.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
-        appearance = try values.decodeIfPresent(GlassAppearance.self, forKey: .appearance) ?? .automatic
+        appearance = try values.decodeIfPresent(GlassAppearance.self, forKey: .appearance) ?? .dark
         animationSpeed = try values.decodeIfPresent(Double.self, forKey: .animationSpeed) ?? 1
         animationIntensity = try values.decodeIfPresent(Double.self, forKey: .animationIntensity) ?? 1
         hoverPreviews = try values.decodeIfPresent(Bool.self, forKey: .hoverPreviews) ?? true
@@ -82,6 +82,7 @@ public struct Preferences: Codable, Equatable, Sendable {
     public func activeTone(systemIsDark: Bool) -> BackgroundTone {
         appearance == .dark || (appearance == .automatic && systemIsDark) ? .dark : .light
     }
+    public mutating func editAppearance(_ tone: BackgroundTone) { appearance = tone == .light ? .light : .dark }
 
     public func background(for tone: BackgroundTone) -> FolderBackground {
         tone == .light ? lightBackground : darkBackground

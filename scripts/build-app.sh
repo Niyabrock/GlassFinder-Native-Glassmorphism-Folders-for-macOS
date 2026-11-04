@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if [[ "$(uname -s)" != Darwin ]]; then
-  echo "GlassFinder requires macOS 14.5+ and Xcode 15.4+ to build." >&2
+  echo "Glass Folder requires macOS 14.5+ and Xcode 15.4+ to build." >&2
   exit 1
 fi
 configuration="${1:-debug}"
@@ -18,7 +18,7 @@ for arch in "${architectures[@]}"; do
   binaries+=("$binary_directory/GlassFinder")
 done
 ./scripts/make-icon.sh
-bundle="build/GlassFinder.app"
+bundle="build/Glass Folder.app"
 mkdir -p "$bundle/Contents/MacOS" "$bundle/Contents/Resources"
 if [[ "$architecture" == universal ]]; then
   lipo -create "${binaries[@]}" -output "$bundle/Contents/MacOS/GlassFinder"

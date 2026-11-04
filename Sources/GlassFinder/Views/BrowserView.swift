@@ -12,7 +12,7 @@ struct BrowserView: View {
         VStack(spacing: 0) {
             HStack {
                 Image(systemName: "square.stack.3d.up.fill").foregroundStyle(.cyan)
-                Text("GlassFinder").font(.title2.weight(.semibold))
+                Text("Glass Folder").font(.title2.weight(.semibold))
                 Spacer()
                 Toggle("Glass effects", isOn: $model.preferences.isEnabled).toggleStyle(.switch)
             }.padding(20)
@@ -44,7 +44,7 @@ struct BrowserView: View {
             .onKeyPress(.space) { openSelected(); return .handled }
             Divider()
             HStack {
-                Text(model.preferences.isEnabled ? "Standalone prototype · Desktop and Finder overlays are not active" : "GlassFinder is off · Previews and folder monitoring stopped")
+                Text(model.preferences.isEnabled ? "Standalone prototype · Desktop and Finder overlays are not active" : "Glass Folder is off · Previews and folder monitoring stopped")
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button("Settings…") { openSettings() }
@@ -60,10 +60,13 @@ struct BrowserView: View {
         .dropDestination(for: URL.self) { urls, _ in
             model.add(urls); return urls.contains { $0.hasDirectoryPath || (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
         }
-        .alert("GlassFinder", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
+        .alert("Glass Folder", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
             Button("OK") { model.error = nil }
         } message: { Text(model.error ?? "") }
         .onAppear { focused = true }
+        .sheet(item: $model.customizingFolder) { folder in
+            FolderCustomizationView(folder: folder).environmentObject(model).environmentObject(model.backgrounds)
+        }
     }
 
     private func openSelected() {

@@ -1,4 +1,4 @@
-name: GlassFinder
+name: Glass Folder
 options:
   deploymentTarget:
     macOS: "14.5"
@@ -29,6 +29,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.glassfinder.app
+        PRODUCT_NAME: Glass Folder
+        EXECUTABLE_NAME: GlassFinder
         INFOPLIST_FILE: Resources/Info.plist
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
     dependencies:
@@ -53,7 +55,7 @@ targets:
     dependencies:
       - target: GlassFinderCore
 schemes:
-  GlassFinder:
+  Glass Folder:
     build:
       targets:
         GlassFinder: all

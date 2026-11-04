@@ -12,7 +12,7 @@ targets.append(.executableTarget(name: "GlassFinder", dependencies: ["GlassFinde
 #endif
 
 let package = Package(
-    name: "GlassFinder",
+    name: "GlassFolder",
     platforms: [.macOS("14.5")],
     products: products,
     targets: targets

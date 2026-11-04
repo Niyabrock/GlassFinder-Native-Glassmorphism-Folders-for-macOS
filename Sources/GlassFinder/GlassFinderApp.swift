@@ -10,24 +10,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 @main
 @MainActor
-struct GlassFinderApp: App {
+struct GlassFolderApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup("GlassFinder", id: "browser") {
+        WindowGroup("Glass Folder", id: "browser") {
             BrowserView().environmentObject(model).environmentObject(model.backgrounds)
                 .onAppear { delegate.model = model }
         }
         .defaultSize(width: 820, height: 580)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Glass Folder") { NSApp.orderFrontStandardAboutPanel(options: [.applicationName: "Glass Folder"]) }
+            }
             CommandGroup(after: .newItem) {
                 Button("Add Folders…") { model.chooseFolders() }.keyboardShortcut("o")
-                Toggle("Enable GlassFinder", isOn: $model.preferences.isEnabled)
+                Toggle("Enable Glass Folder", isOn: $model.preferences.isEnabled)
             }
         }
         Settings { SettingsView().environmentObject(model).environmentObject(model.backgrounds) }
-        MenuBarExtra("GlassFinder", systemImage: model.preferences.isEnabled ? "folder.fill" : "folder") {
+        MenuBarExtra("Glass Folder", systemImage: model.preferences.isEnabled ? "folder.fill" : "folder") {
             MenuControls().environmentObject(model)
         }
     }
@@ -39,13 +42,13 @@ private struct MenuControls: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
     var body: some View {
-        Toggle("Enable GlassFinder", isOn: $model.preferences.isEnabled)
+        Toggle("Enable Glass Folder", isOn: $model.preferences.isEnabled)
         Divider()
-        Button("Show GlassFinder") { openWindow(id: "browser"); NSApp.activate(ignoringOtherApps: true) }
+        Button("Show Glass Folder") { openWindow(id: "browser"); NSApp.activate(ignoringOtherApps: true) }
         Button("Add Folders…") { NSApp.activate(ignoringOtherApps: true); model.chooseFolders() }
         Button("Settings…") { NSApp.activate(ignoringOtherApps: true); openSettings() }
         Divider()
         Text("Desktop / Finder overlays: not active")
-        Button("Quit GlassFinder") { model.shutdown(); NSApp.terminate(nil) }.keyboardShortcut("q")
+        Button("Quit Glass Folder") { model.shutdown(); NSApp.terminate(nil) }.keyboardShortcut("q")
     }
 }

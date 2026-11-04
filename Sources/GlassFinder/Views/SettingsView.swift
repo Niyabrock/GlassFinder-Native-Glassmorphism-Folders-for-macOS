@@ -7,7 +7,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("General") {
-                Toggle("Enable GlassFinder", isOn: $model.preferences.isEnabled)
+                Toggle("Enable Glass Folder", isOn: $model.preferences.isEnabled)
                 Picker("Folder Size", selection: $model.preferences.folderSize) {
                     ForEach(FolderSize.allCases, id: \.self) { Text($0.rawValue.capitalized).tag($0) }
                 }
@@ -36,7 +36,7 @@ struct SettingsView: View {
             }
         }.formStyle(.grouped).frame(width: 660, height: 800)
             .onAppear { model.updateLoginStatus() }
-            .alert("GlassFinder", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
+            .alert("Glass Folder", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) {
                 Button("OK") { model.error = nil }
             } message: { Text(model.error ?? "") }
     }

@@ -9,6 +9,7 @@ final class BackgroundStore: ObservableObject {
     private let directory: URL
 
     init() {
+        // Deliberately retain the former name on disk so existing imports survive the display rename.
         directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("GlassFinder/Backgrounds", isDirectory: true)
         for tone in BackgroundTone.allCases { images[tone] = NSImage(contentsOf: location(tone)) }

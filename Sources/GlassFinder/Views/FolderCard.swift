@@ -22,7 +22,7 @@ struct FolderCard: View {
             if model.preferences.isEnabled {
                 GlassFolderView(images: folder.images, names: folder.files.map { $0.url.lastPathComponent },
                                 selected: selected, hovered: hovered,
-                                preferences: model.preferences, itemCount: folder.itemCount)
+                                preferences: folder.customization.applying(to: model.preferences), itemCount: folder.itemCount)
             } else {
                 Image(nsImage: NSWorkspace.shared.icon(forFile: folder.url.path))
                     .resizable().scaledToFit().frame(width: size.iconWidth, height: size.iconWidth * 272 / 340)
@@ -63,8 +63,18 @@ struct FolderCard: View {
         .accessibilityHint("Activate to open in Finder")
         .accessibilityAction { model.open(folder) }
         .contextMenu {
+            Menu("Folder Color") {
+                Button("Default (Use Appearance Color)") { model.setFolderTint(nil, for: folder) }
+                ForEach(FolderTint.allCases, id: \.self) { tint in
+                    Button(tint.rawValue.capitalized) { model.setFolderTint(tint, for: folder) }
+                }
+            }
+            Button("Customize Color and Image…") { model.customizingFolder = folder }
+            Button("Export Static Icon PNG…") {
+                model.exportStaticIcon(for: folder, tone: model.preferences.activeTone(systemIsDark: colorScheme == .dark))
+            }
             Button("Open in Finder") { model.open(folder) }
-            Button("Remove from GlassFinder") { model.remove(folder) }
+            Button("Remove from Glass Folder") { model.remove(folder) }
         }
         .help(folder.message ?? folder.url.path)
     }

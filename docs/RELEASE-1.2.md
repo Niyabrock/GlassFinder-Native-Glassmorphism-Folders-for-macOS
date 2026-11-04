@@ -1,5 +1,7 @@
 # GlassFinder 1.2 development release
 
+Historical guide retained for the former app name and its build outputs. For the renamed application, use [Glass Folder instructions](GLASS-FOLDER.md).
+
 Branch: `glassfinder/v1.2`, based on the preserved v1.1 commit `a1970e6`. Neither v1.1 nor `main` is overwritten or merged. The user reports v1.1 builds/runs in Xcode; v1.2 native validation remains outstanding on this Linux host.
 
 ## Changes

@@ -24,6 +24,7 @@ final class CustomizationTests: XCTestCase {
 
     func testAutomaticOnlySelectsTheCorrectSavedProfile() {
         var preferences = Preferences()
+        preferences.appearance = .automatic
         preferences.lightProfile.transparency = 0.3
         preferences.darkProfile.transparency = 0.85
         XCTAssertEqual(preferences.profile(for: preferences.activeTone(systemIsDark: false)).transparency, 0.3)

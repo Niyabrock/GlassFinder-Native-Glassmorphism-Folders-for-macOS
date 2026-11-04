@@ -4,6 +4,8 @@ The implementation is authored on Linux. Portable core tests can execute with a 
 
 ## Current cloud results
 
+The current **Glass Folder** refinement has 24 passing XCTest cases, adding palette accuracy, coherent appearance editing, new-profile compatibility, per-folder isolation/stable UUID records, and image placement/aspect/round-trip coverage. The renamed app metadata, shell/YAML syntax, source parsing and whitespace checks pass. No native UI, PNG export, bookmark migration, app/DMG, signing or Finder/Desktop integration test was run on this Linux host. Start with [the current build and QA guide](GLASS-FOLDER.md). The paragraphs below preserve older baseline evidence.
+
 For v1.2, sixteen XCTest cases pass, including separate appearance/gradient persistence and migration, Automatic mode selection, gradient editing/validation, direct-child counts independent of preview limits, unavailable vs empty folders, and fan/limit bounds. macOS sources are syntax-parsed, not type-checked or launched. See [the v1.2 release QA gate](RELEASE-1.2.md) for the native checks required before approval. The following paragraph records the earlier v1.1 baseline.
 
 Swift 6.0.3 on Linux (Swift 5 language mode): eight XCTest cases executed and passed, covering real folder enumeration, missing-directory errors, preference bounds/round-trip, selection/disable precedence, reference pose/jitter parity, independent backgrounds, legacy settings migration and click-toggle behavior. Application Swift files and the icon-generation script passed syntax parsing; the portable core is type-checked by its build. Bundle metadata validation, shell syntax checks and Git whitespace checks passed. Regenerating both artwork PNGs reproduced identical SHA-256 hashes during the initial implementation. No native v1.1 application build, UI test, Finder integration test, login test or performance measurement ran here. The separate Swift Testing runner reports zero tests because this project uses XCTest; that is not the test count above. Follow the additional [v1.1 release QA gate](RELEASE-1.1.md).
@@ -20,7 +22,7 @@ This checks metadata, runs core tests, builds the app, creates its bundle and ve
 
 ```sh
 xcodegen generate
-xcodebuild -project GlassFinder.xcodeproj -scheme GlassFinder -destination 'platform=macOS' -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO test
+xcodebuild -project 'Glass Folder.xcodeproj' -scheme 'Glass Folder' -destination 'platform=macOS' -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO test
 ```
 
 ## Functional Mac acceptance

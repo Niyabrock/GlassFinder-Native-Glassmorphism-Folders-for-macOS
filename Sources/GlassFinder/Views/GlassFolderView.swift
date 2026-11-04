@@ -126,11 +126,14 @@ struct GlassFolderView: View {
                 Color(white: dark ? 0.16 : 0.9)
             } else {
                 Rectangle().fill(.ultraThinMaterial).opacity(tintOpacity * 0.4)
-                profile.tint.swiftUIColor.opacity(tintOpacity * 0.6)
+                profile.effectiveTint.swiftUIColor.opacity(tintOpacity * 0.6)
             }
             if let artwork {
-                Image(nsImage: artwork).resizable().scaledToFill().frame(width: 364, height: 296)
-                    .offset(x: -pointer.x * 7, y: -pointer.y * 6)
+                let aspect = max(0.01, artwork.size.width / max(1, artwork.size.height))
+                let frame = profile.imagePlacement.frame(aspectRatio: Double(aspect))
+                Image(nsImage: artwork).resizable().interpolation(.high)
+                    .frame(width: CGFloat(frame.width), height: CGFloat(frame.height))
+                    .position(x: CGFloat(frame.centerX) - pointer.x * 7, y: CGFloat(frame.centerY) - pointer.y * 6)
             }
             if background == .dots {
                 Canvas { context, size in
@@ -188,9 +191,9 @@ struct GlassFolderView: View {
                     .blur(radius: 22).saturation(1.5).offset(y: -74)
             }
             LinearGradient(stops: [
-                .init(color: profile.tint.swiftUIColor.opacity(tintOpacity * 0.7), location: 0),
-                .init(color: profile.tint.swiftUIColor.opacity(tintOpacity), location: 0.44),
-                .init(color: profile.tint.swiftUIColor.opacity(min(1, tintOpacity * 1.3)), location: 1)
+                .init(color: profile.effectiveTint.swiftUIColor.opacity(tintOpacity * 0.7), location: 0),
+                .init(color: profile.effectiveTint.swiftUIColor.opacity(tintOpacity), location: 0.44),
+                .init(color: profile.effectiveTint.swiftUIColor.opacity(min(1, tintOpacity * 1.3)), location: 1)
             ], startPoint: .top, endPoint: .bottom)
             RadialGradient(colors: [.white.opacity(0.22), .clear],
                            center: UnitPoint(x: 0.5 + pointer.x * 0.46, y: 0.3 + pointer.y * 0.4), startRadius: 0, endRadius: 182)

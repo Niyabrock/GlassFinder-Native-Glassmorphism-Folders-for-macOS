@@ -90,12 +90,30 @@ public struct AppearanceProfile: Codable, Equatable, Sendable {
     public var keyline: KeylineGradient
     public var background: FolderBackground = .none
     public var showItemCount = false
+    public var presetTint: FolderTint?
+    public var imagePlacement = ImagePlacement()
+    public var effectiveTint: RGBColor { presetTint?.color ?? tint }
+    private enum CodingKeys: String, CodingKey {
+        case transparency, tint, keyline, background, showItemCount, presetTint, imagePlacement
+    }
+    public init(tint: RGBColor, keyline: KeylineGradient) { self.tint = tint; self.keyline = keyline }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        tint = try values.decode(RGBColor.self, forKey: .tint)
+        keyline = try values.decode(KeylineGradient.self, forKey: .keyline)
+        transparency = try values.decodeIfPresent(Double.self, forKey: .transparency) ?? 0.9
+        background = try values.decodeIfPresent(FolderBackground.self, forKey: .background) ?? .none
+        showItemCount = try values.decodeIfPresent(Bool.self, forKey: .showItemCount) ?? false
+        presetTint = try values.decodeIfPresent(FolderTint.self, forKey: .presetTint)
+        imagePlacement = try values.decodeIfPresent(ImagePlacement.self, forKey: .imagePlacement) ?? .init()
+        normalize()
+    }
     public static func defaults(for tone: BackgroundTone) -> Self {
         Self(tint: tone == .light ? RGBColor(0.9, 0.93, 0.96) : RGBColor(0.1, 0.12, 0.15), keyline: .defaults(for: tone))
     }
     public mutating func normalize() {
         transparency = transparency.isFinite ? min(0.95, max(0.15, transparency)) : 0.9
-        tint.normalize(); keyline.normalize()
+        tint.normalize(); keyline.normalize(); imagePlacement.normalize()
     }
 }
 
@@ -103,7 +121,7 @@ public enum FolderSize: String, Codable, CaseIterable, Sendable {
     case small, medium, large
     public var iconWidth: Double { self == .small ? 48 : (self == .medium ? 64 : 96) }
     public var labelFont: Double { self == .small ? 11 : (self == .medium ? 12 : 13) }
-    public var labelGap: Double { self == .small ? 3 : (self == .medium ? 4 : 6) }
+    public var labelGap: Double { self == .small ? 5 : (self == .medium ? 7 : 10) }
     public var cellWidth: Double { iconWidth + 48 }
     public var cellHeight: Double { iconWidth * 326 / 340 + labelGap + labelFont * 3 + 16 }
 }

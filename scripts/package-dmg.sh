@@ -5,12 +5,12 @@ cd "$(dirname "$0")/.."
 architecture="${1:-arm64}"
 ./scripts/build-app.sh release "$architecture"
 version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)
-image="build/GlassFinder-${version}-${architecture}.dmg"
+image="build/Glass-Folder-${version}-${architecture}.dmg"
 staging="$(mktemp -d /tmp/GlassFinder-dmg.XXXXXX)"
 trap 'rm -rf "$staging"' EXIT
-ditto build/GlassFinder.app "$staging/GlassFinder.app"
+ditto "build/Glass Folder.app" "$staging/Glass Folder.app"
 ln -s /Applications "$staging/Applications"
-hdiutil create -volname "GlassFinder $version" -srcfolder "$staging" -format UDZO -ov "$image"
+hdiutil create -volname "Glass Folder $version" -srcfolder "$staging" -format UDZO -ov "$image"
 hdiutil verify "$image"
 if [[ "${SIGNING_IDENTITY:--}" != - ]]; then
   codesign --force --sign "$SIGNING_IDENTITY" --timestamp "$image"
